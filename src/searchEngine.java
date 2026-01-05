@@ -128,7 +128,6 @@ public class searchEngine {
 
     private Set<Integer> getDocsForWord(String word) {
         return new HashSet<>(invertedIndex.getPostings(word).keySet());
-        // keySet() is a view, not a copy. So copy view in HashSet then return.
     }
 
 
@@ -154,44 +153,36 @@ public class searchEngine {
         return results;
     }
 
+    // Final Combining all the features...
+    public List<Result> topKTfIdfBoolean (String query, int k) {
 
-    public static void main(String[] args) {
+        // 1. Boolean filtering
+        Set<Integer> filteredDocs = booleanSearch(query);
 
-        searchEngine engine = new searchEngine();
+        // 2. TF - IDF scores for query
+        Map<Integer, Double> tfIdfScores = search(query);
 
-//        engine.addDocument("Java is a powerful language");
-//        engine.addDocument("Search engine use inverted index");
-//        engine.addDocument("Java search engine example");
-//        engine.addDocument("Kislay Tinker is a good student");
-        engine.addDocument("Java search engine");
-        engine.addDocument("Python search engine");
-        engine.addDocument("Java programming");
+        // 3. Map heap for ranking
+        PriorityQueue<Result> maxHeap = new PriorityQueue<>((a, b) -> Double.compare(b.score, a.score));
 
-        System.out.println(engine.getPostings("java"));
-        System.out.println(engine.getPostings("search"));
-        System.out.println(engine.getPostings("engine"));
-        System.out.println(engine.getPostings("student"));
-
-        Map<Integer, Double> docs = engine.search("kislay tinker");
-        System.out.println(docs);
-
-        List<Result> topResults = engine.topKSearch("java search", 2);
-
-        for (Result r : topResults) {
-            System.out.println("Doc " + r.docId + " → Score " + r.score);
+        // 4. Only rank filtered document (acc to Boolean function)
+        for (Integer docId : filteredDocs) {
+            Double score =  tfIdfScores.get(docId);
+            if (score != null) {
+                maxHeap.add(new Result(docId, score));
+            }
         }
 
-//        List<searching.Result> results =
-//                engine.topKSearch("java programming", 5);
-//
-//        for (searching.Result r : results) {
-//            System.out.println("Doc " + r.docId + " → Score " + r.score);
-//        }
+        // 5. Extract Top-K
+        List<Result> results = new ArrayList<>();
 
-        // Java Bool search (searching with boolean queries)
+        while (k > 0 && !maxHeap.isEmpty()) {
+            results.add(maxHeap.poll());
+            k--;
+        }
 
-        System.out.println(engine.booleanSearch("java AND search"));
-        System.out.println(engine.booleanSearch("java OR python"));
+        return results;
+
     }
 
 }
