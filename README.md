@@ -30,13 +30,21 @@ OOP | Object-oriented design
 📂 Project Structure
 
 In-Memory-Search-Engine/
+
 │
+
 ├── Tokenizer.java
+
 ├── InvertedIndex.java
+
 ├── searching.java
+
 │   └── Result (inner class)
+
 ├── Main.java
+
 │
+
 └── SearchEngineProject.jar
 
 > ⚠️ Graph-related classes are for demonstration and not part of the core search engine logic.
